@@ -82,14 +82,15 @@
   <div style="display:flex;gap:6px;align-items:center">
     <span class="status" id="status">carregando...</span>
     <button id="btn-novo" onclick="togglePanel('novo')">+ Novo item</button>
+    <button id="btn-cats" onclick="togglePanel('cats')">Categorias</button>
   </div>
 </div>
 
 <div id="panel-novo" class="panel" style="display:none">
   <div class="grid2">
     <div class="span2">
-      <label>Nome do item</label>
-      <input id="f-nome" placeholder="Ex: Negociação Família Macedo" onkeydown="if(event.key==='Enter')addItem()"/>
+      <label>Nome</label>
+      <input id="f-nome" placeholder="Nome do item" onkeydown="if(event.key==='Enter')addItem()"/>
     </div>
     <div>
       <label>Categoria</label>
@@ -104,11 +105,15 @@
     <div>
       <label>Impacto</label>
       <select id="f-imp">
-        <option>ALTO</option><option selected>MÉDIO</option><option>BAIXO</option>
+        <option>ALTO</option><option>MÉDIO</option><option selected>BAIXO</option>
       </select>
     </div>
   </div>
   <button class="btn-add" onclick="addItem()">Adicionar</button>
+</div>
+
+<div id="panel-cats" class="panel" style="display:none">
+  <div id="cats-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
 </div>
 
 <div class="matrix-wrap">
@@ -394,14 +399,44 @@ function renderLegend() {
   count.className = "count";
   count.textContent = `${state.itens.length} item${state.itens.length!==1?"s":""} · Google Sheets`;
   el.appendChild(count);
+
+  const catsList = document.getElementById("cats-list");
+  catsList.innerHTML = "";
+  state.cats.forEach(c => {
+    const pill = document.createElement("div");
+    pill.style.cssText = `
+      display:flex;align-items:center;gap:8px;
+      background:#2a2a2a;border:0.5px solid #555;
+      border-radius:8px;padding:7px 12px;
+    `;
+    const swatch = document.createElement("span");
+    swatch.style.cssText = `
+      width:14px;height:14px;border-radius:3px;flex-shrink:0;
+      background:${c.bg};border:1px solid ${c.border};
+    `;
+    const label = document.createElement("span");
+    label.style.cssText = `font-size:12px;color:#e0e0e0;`;
+    label.textContent = c.nome;
+    pill.appendChild(swatch);
+    pill.appendChild(label);
+    catsList.appendChild(pill);
+  });
 }
 
 function togglePanel(name) {
-  const p = document.getElementById(`panel-${name}`);
-  const b = document.getElementById(`btn-${name==="novo"?"novo":"cats"}`);
-  const showing = p.style.display !== "none";
-  p.style.display = showing ? "none" : "block";
-  b.classList.toggle("active", !showing);
+  const panels = ["novo","cats"];
+  panels.forEach(n => {
+    const p = document.getElementById(`panel-${n}`);
+    const b = document.getElementById(`btn-${n==="novo"?"novo":"cats"}`);
+    if (n === name) {
+      const showing = p.style.display !== "none";
+      p.style.display = showing ? "none" : "block";
+      b.classList.toggle("active", !showing);
+    } else {
+      p.style.display = "none";
+      b.classList.remove("active");
+    }
+  });
 }
 
 function esc(s) {
