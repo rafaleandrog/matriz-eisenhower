@@ -6,16 +6,16 @@
 <title>Matriz de Prioridade</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#2c2c2c;font-family:sans-serif;min-height:100vh;padding:1rem;color:#e0e0e0}
+  body{background:#2c2c2c;font-family:sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:#e0e0e0}
   h1{font-size:15px;font-weight:500;color:#e0e0e0}
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;flex-shrink:0}
   .status{font-size:11px;color:#555;transition:color 0.2s}
   .status.saving{color:#f0a500}
   .status.error{color:#c0392b}
   .status.ok{color:#27ae60}
   button{font-size:12px;padding:5px 14px;border:0.5px solid #555;border-radius:6px;cursor:pointer;background:transparent;color:#aaa}
   button.active,button:hover{background:#444;color:#fff}
-  .panel{background:#333;border-radius:10px;padding:12px;margin-bottom:14px}
+  .panel{background:#333;border-radius:10px;padding:12px;margin:0 16px 8px;flex-shrink:0}
   .panel label{font-size:11px;color:#aaa;display:block;margin-bottom:3px}
   .panel input,.panel select{width:100%;font-size:12px;padding:5px 8px;border:0.5px solid #555;
     border-radius:6px;background:#2a2a2a;color:#e0e0e0;font-family:inherit;margin-bottom:6px}
@@ -23,40 +23,41 @@
   .span2{grid-column:1/-1}
   .btn-add{font-size:12px;padding:6px 16px;border:0.5px solid #666;border-radius:6px;
     background:transparent;color:#e0e0e0;cursor:pointer;margin-top:2px}
-  .legend{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-  .legend-pill{font-size:11px;padding:2px 8px;border-radius:6px}
-  .count{font-size:11px;color:#555;margin-left:auto}
-  .matrix-wrap{display:flex;gap:0;align-items:stretch}
+  .matrix-section{flex:1;display:flex;flex-direction:column;min-height:0;padding:0 8px 0}
+  .matrix-wrap{flex:1;display:flex;gap:0;align-items:stretch;min-height:0}
   .yaxis{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}
-  .yaxis-line{flex:1;display:flex;flex-direction:column;align-items:center;padding-bottom:28px}
+  .yaxis-line{flex:1;display:flex;flex-direction:column;align-items:center}
   .yaxis-label{font-size:12px;font-weight:500;color:#ccc;writing-mode:vertical-rl;
     transform:rotate(180deg);letter-spacing:1px;padding-bottom:28px}
-  .matrix-col{flex:1;display:flex;flex-direction:column;min-width:0}
-  .matrix-row{display:flex;flex:1;min-width:0}
+  .matrix-col{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+  .matrix-row{display:flex;flex:1;min-width:0;min-height:0}
   .ylabels{width:38px;flex-shrink:0;display:flex;flex-direction:column;justify-content:space-around}
   .ylabel{font-size:10px;color:#888;text-align:right;padding-right:6px;height:33.33%;
     display:flex;align-items:center;justify-content:flex-end}
   .grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
-    gap:5px;min-height:660px}
+    gap:5px;min-height:0}
   .cell{border-radius:4px;padding:10px;display:flex;flex-wrap:wrap;align-content:flex-start;
-    gap:8px;transition:background 0.15s;border:1px solid transparent}
+    gap:8px;transition:background 0.15s;border:1px solid transparent;overflow:auto}
   .cell.dragover{background:rgba(255,255,255,0.1)!important;border-color:rgba(255,255,255,0.3)!important}
   .xlabels{display:flex;margin-left:38px;margin-top:4px}
   .xlabel{flex:1;text-align:center;font-size:10px;color:#888}
   .xaxis{display:flex;align-items:center;margin-left:38px;margin-top:4px}
   .xaxis-line{flex:1;height:2px;background:#bbb}
   .xaxis-label{display:flex;justify-content:center;margin-top:4px;margin-left:38px}
+  .legend{flex-shrink:0;padding:8px 8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .legend-pill{font-size:11px;padding:2px 8px;border-radius:6px}
+  .count{font-size:11px;color:#555;margin-left:auto}
   .card{border-radius:6px;padding:7px 20px 7px 8px;font-size:12px;font-weight:500;
-    cursor:grab;user-select:none;width:140px;min-width:140px;max-width:140px;
+    cursor:grab;user-select:none;width:150px;min-width:150px;max-width:150px;
     word-break:break-word;overflow-wrap:break-word;hyphens:auto;line-height:1.5;
     position:relative;flex-shrink:0;transition:opacity 0.15s}
   .card:active{cursor:grabbing;opacity:0.7}
   .card .del{position:absolute;top:3px;right:4px;background:none;border:none;
-    cursor:pointer;font-size:10px;opacity:0.5;padding:0;line-height:1}
+    cursor:pointer;font-size:10px;opacity:0.5;padding:0;line-height:1;color:inherit}
   .card .cat-name{font-size:10px;opacity:0.6;margin-top:3px}
   .ghost{position:fixed;pointer-events:none;z-index:9999;opacity:0.88;
     border-radius:6px;padding:7px 8px;font-size:12px;font-weight:500;
-    width:140px;word-break:break-word;overflow-wrap:break-word;line-height:1.5;display:none}
+    width:150px;word-break:break-word;overflow-wrap:break-word;line-height:1.5;display:none}
   .modal-bg{position:fixed;z-index:8000;top:0;left:0;right:0;bottom:0;
     background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center}
   .modal{background:#2a2a2a;border:0.5px solid #555;border-radius:10px;padding:16px;width:280px}
@@ -116,40 +117,42 @@
   <div id="cats-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
 </div>
 
-<div class="matrix-wrap">
-  <div class="yaxis">
-    <div class="yaxis-line">
-      <svg width="12" height="10" viewBox="0 0 12 10"><polygon points="6,0 12,10 0,10" fill="#bbb"/></svg>
-      <div style="flex:1;width:2px;background:#bbb"></div>
-    </div>
-    <div class="yaxis-label">Impacto</div>
-    <div style="height:28px"></div>
-  </div>
-  <div class="matrix-col">
-    <div class="matrix-row">
-      <div class="ylabels">
-        <div class="ylabel">ALTO</div>
-        <div class="ylabel">MÉDIO</div>
-        <div class="ylabel">BAIXO</div>
+<div class="matrix-section">
+  <div class="matrix-wrap">
+    <div class="yaxis">
+      <div class="yaxis-line">
+        <svg width="12" height="10" viewBox="0 0 12 10"><polygon points="6,0 12,10 0,10" fill="#bbb"/></svg>
+        <div style="flex:1;width:2px;background:#bbb"></div>
       </div>
-      <div class="grid" id="grid"></div>
+      <div class="yaxis-label">Impacto</div>
+      <div style="height:28px"></div>
     </div>
-    <div class="xlabels">
-      <div class="xlabel">BAIXA</div>
-      <div class="xlabel">MÉDIA</div>
-      <div class="xlabel">ALTA</div>
-    </div>
-    <div class="xaxis">
-      <div class="xaxis-line"></div>
-      <svg width="10" height="12" viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12" fill="#bbb"/></svg>
-    </div>
-    <div class="xaxis-label">
-      <span style="font-size:12px;font-weight:500;color:#ccc;letter-spacing:1px">Urgência</span>
+    <div class="matrix-col">
+      <div class="matrix-row">
+        <div class="ylabels">
+          <div class="ylabel">ALTO</div>
+          <div class="ylabel">MÉDIO</div>
+          <div class="ylabel">BAIXO</div>
+        </div>
+        <div class="grid" id="grid"></div>
+      </div>
+      <div class="xlabels">
+        <div class="xlabel">BAIXA</div>
+        <div class="xlabel">MÉDIA</div>
+        <div class="xlabel">ALTA</div>
+      </div>
+      <div class="xaxis">
+        <div class="xaxis-line"></div>
+        <svg width="10" height="12" viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12" fill="#bbb"/></svg>
+      </div>
+      <div class="xaxis-label">
+        <span style="font-size:12px;font-weight:500;color:#ccc;letter-spacing:1px">Urgência</span>
+      </div>
     </div>
   </div>
+  <div class="legend" id="legend"></div>
 </div>
 
-<div class="legend" id="legend"></div>
 <div id="ghost" class="ghost"></div>
 
 <div id="modal-bg" class="modal-bg" onclick="closeModal(event)">
@@ -178,14 +181,14 @@
 const URGENCIAS = ["BAIXA","MÉDIA","ALTA"];
 const IMPACTOS  = ["ALTO","MÉDIO","BAIXO"];
 const CELL_COLORS = {
-  "ALTO__ALTA":"#c0392b25","ALTO__MÉDIA":"#e67e2228","ALTO__BAIXA":"#e67e2228",
-  "MÉDIO__ALTA":"#e67e2228","MÉDIO__MÉDIA":"#27ae6022","MÉDIO__BAIXO":"#27ae6022",
-  "BAIXO__ALTA":"#e67e2228","BAIXO__MÉDIA":"#27ae6022","BAIXO__BAIXO":"#66666618"
+  "ALTO__ALTA":"#c0392b45","ALTO__MÉDIA":"#e67e2238","ALTO__BAIXA":"#e67e2238",
+  "MÉDIO__ALTA":"#e67e2238","MÉDIO__MÉDIA":"#27ae6040","MÉDIO__BAIXO":"#e67e2225",
+  "BAIXO__ALTA":"#e67e2238","BAIXO__MÉDIA":"#27ae6030","BAIXO__BAIXO":"#66666625"
 };
 const CELL_BORDER = {
-  "ALTO__ALTA":"#c0392b55","ALTO__MÉDIA":"#e67e2240","ALTO__BAIXA":"#e67e2240",
-  "MÉDIO__ALTA":"#e67e2240","MÉDIO__MÉDIA":"#27ae6040","MÉDIO__BAIXO":"#27ae6040",
-  "BAIXO__ALTA":"#e67e2240","BAIXO__MÉDIA":"#27ae6040","BAIXO__BAIXO":"#66666635"
+  "ALTO__ALTA":"#c0392b60","ALTO__MÉDIA":"#e67e2245","ALTO__BAIXA":"#e67e2245",
+  "MÉDIO__ALTA":"#e67e2245","MÉDIO__MÉDIA":"#27ae6055","MÉDIO__BAIXO":"#e67e2235",
+  "BAIXO__ALTA":"#e67e2245","BAIXO__MÉDIA":"#27ae6040","BAIXO__BAIXO":"#66666640"
 };
 
 let state = { itens:[], cats:[] };
@@ -198,12 +201,18 @@ function setStatus(msg, cls) {
   el.className = "status " + (cls||"");
 }
 
+// FIX: para GET, passa os parâmetros como query string na URL
 async function api(method, body) {
   try {
-    const opts = method === "GET"
-      ? { method:"GET" }
-      : { method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(body) };
-    const r = await fetch(API, opts);
+    let url = API;
+    let opts;
+    if (method === "GET") {
+      url = `${API}?${new URLSearchParams(body || {}).toString()}`;
+      opts = { method: "GET" };
+    } else {
+      opts = { method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(body) };
+    }
+    const r = await fetch(url, opts);
     return await r.json();
   } catch(e) {
     setStatus("erro de conexão", "error");
@@ -214,7 +223,10 @@ async function api(method, body) {
 async function load() {
   setStatus("carregando...");
   const data = await api("GET", { action:"getAll" });
-  if (!data) return;
+  if (!data || data.erro) {
+    setStatus("erro ao carregar", "error");
+    return;
+  }
   state = data;
   render();
   setStatus("salvo", "ok");
@@ -222,7 +234,7 @@ async function load() {
 }
 
 function getCat(nome) {
-  return state.cats.find(c=>c.nome===nome) || {bg:"#ccc",text:"#333",border:"#999"};
+  return state.cats.find(c=>c.nome===nome) || {bg:"#555",text:"#ddd",border:"#777"};
 }
 
 function render() {
@@ -241,8 +253,8 @@ function renderGrid() {
       cell.className = "cell";
       cell.dataset.urg = urg;
       cell.dataset.imp = imp;
-      cell.style.background   = CELL_COLORS[key]  || "#66666618";
-      cell.style.borderColor  = CELL_BORDER[key]  || "#66666635";
+      cell.style.background  = CELL_COLORS[key]  || "#66666625";
+      cell.style.borderColor = CELL_BORDER[key]  || "#66666640";
       cell.addEventListener("dragover",  e => { e.preventDefault(); cell.classList.add("dragover"); });
       cell.addEventListener("dragleave", ()=> cell.classList.remove("dragover"));
       cell.addEventListener("drop",      e => { e.preventDefault(); cell.classList.remove("dragover"); dropItem(urg, imp); });
@@ -349,10 +361,10 @@ function openEdit(id) {
 }
 
 async function saveEdit() {
-  const nome     = document.getElementById("m-nome").value.trim();
-  const categoria= document.getElementById("m-cat").value;
-  const urgencia = document.getElementById("m-urg").value;
-  const impacto  = document.getElementById("m-imp").value;
+  const nome      = document.getElementById("m-nome").value.trim();
+  const categoria = document.getElementById("m-cat").value;
+  const urgencia  = document.getElementById("m-urg").value;
+  const impacto   = document.getElementById("m-imp").value;
   const item = state.itens.find(i => String(i.id)===String(editId));
   if (!item || !nome) return;
   item.nome = nome; item.categoria = categoria;
@@ -397,25 +409,19 @@ function renderLegend() {
   });
   const count = document.createElement("span");
   count.className = "count";
-  count.textContent = `${state.itens.length} item${state.itens.length!==1?"s":""} · Google Sheets`;
+  count.textContent = `${state.itens.length} item${state.itens.length!==1?"s":""} · compartilhado`;
   el.appendChild(count);
 
   const catsList = document.getElementById("cats-list");
+  if (!catsList) return;
   catsList.innerHTML = "";
   state.cats.forEach(c => {
     const pill = document.createElement("div");
-    pill.style.cssText = `
-      display:flex;align-items:center;gap:8px;
-      background:#2a2a2a;border:0.5px solid #555;
-      border-radius:8px;padding:7px 12px;
-    `;
+    pill.style.cssText = "display:flex;align-items:center;gap:8px;background:#2a2a2a;border:0.5px solid #555;border-radius:8px;padding:7px 12px;";
     const swatch = document.createElement("span");
-    swatch.style.cssText = `
-      width:14px;height:14px;border-radius:3px;flex-shrink:0;
-      background:${c.bg};border:1px solid ${c.border};
-    `;
+    swatch.style.cssText = `width:14px;height:14px;border-radius:3px;flex-shrink:0;background:${c.bg};border:1px solid ${c.border};`;
     const label = document.createElement("span");
-    label.style.cssText = `font-size:12px;color:#e0e0e0;`;
+    label.style.cssText = "font-size:12px;color:#e0e0e0;";
     label.textContent = c.nome;
     pill.appendChild(swatch);
     pill.appendChild(label);
@@ -424,10 +430,9 @@ function renderLegend() {
 }
 
 function togglePanel(name) {
-  const panels = ["novo","cats"];
-  panels.forEach(n => {
+  ["novo","cats"].forEach(n => {
     const p = document.getElementById(`panel-${n}`);
-    const b = document.getElementById(`btn-${n==="novo"?"novo":"cats"}`);
+    const b = document.getElementById(n==="novo" ? "btn-novo" : "btn-cats");
     if (n === name) {
       const showing = p.style.display !== "none";
       p.style.display = showing ? "none" : "block";
@@ -443,10 +448,7 @@ function esc(s) {
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-// Carrega os dados ao abrir
 load();
-
-// Atualiza automaticamente a cada 30 segundos para sincronizar com edições feitas direto na planilha
 setInterval(load, 30000);
 </script>
 </body>
