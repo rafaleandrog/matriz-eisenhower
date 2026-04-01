@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Matriz de Prioridade</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#2c2c2c;font-family:sans-serif;min-height:100vh;padding:1rem;color:#e0e0e0}
+  h1{font-size:15px;font-weight:500;color:#e0e0e0}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+  .status{font-size:11px;color:#555}
+  .status.saving{color:#f0a500}
+  .status.error{color:#c0392b}
+  button{font-size:12px;padding:5px 14px;border:0.5px solid #555;border-radius:6px;cursor:pointer;background:transparent;color:#aaa}
+  button.active,button:hover{background:#444;color:#fff}
+  .panel{background:#333;border-radius:10px;padding:12px;margin-bottom:14px}
+  .panel label{font-size:11px;color:#aaa;display:block;margin-bottom:3px}
+  .panel input,.panel select,.panel textarea{width:100%;font-size:12px;padding:5px 8px;border:0.5px solid #555;
+    border-radius:6px;background:#2a2a2a;color:#e0e0e0;font-family:inherit;margin-bottom:6px}
+  .panel textarea{height:60px;resize:vertical}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .span2{grid-column:1/-1}
+  .btn-add{font-size:12px;padding:6px 16px;border:0.5px solid #666;border-radius:6px;
+    background:transparent;color:#e0e0e0;cursor:pointer;margin-top:2px}
+  .cats-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .cat-pill{display:flex;align-items:center;gap:5px;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:500}
+  .cat-pill button{background:none;border:none;cursor:pointer;font-size:10px;opacity:0.55;padding:0;color:inherit}
+  .legend{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .legend-pill{font-size:11px;padding:2px 8px;border-radius:6px}
+  .count{font-size:11px;color:#555;margin-left:auto}
+  .matrix-wrap{display:flex;gap:0;align-items:stretch}
+  .yaxis{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}
+  .yaxis-line{flex:1;display:flex;flex-direction:column;align-items:center;padding-bottom:28px}
+  .yaxis-label{font-size:12px;font-weight:500;color:#ccc;writing-mode:vertical-rl;
+    transform:rotate(180deg);letter-spacing:1px;padding-bottom:28px}
+  .matrix-col{flex:1;display:flex;flex-direction:column;min-width:0}
+  .matrix-row{display:flex;flex:1;min-width:0}
+  .ylabels{width:38px;flex-shrink:0;display:flex;flex-direction:column;justify-content:space-around}
+  .ylabel{font-size:10px;color:#888;text-align:right;padding-right:6px;height:33.33%;
+    display:flex;align-items:center;justify-content:flex-end}
+  .grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    gap:5px;min-height:660px}
+  .cell{border-radius:4px;padding:10px;display:flex;flex-wrap:wrap;align-content:flex-start;
+    gap:8px;transition:background 0.1s;border:1px solid transparent}
+  .cell.dragover{background:rgba(255,255,255,0.08)!important;border-color:rgba(255,255,255,0.27)!important}
+  .xlabels{display:flex;margin-left:38px;margin-top:4px}
+  .xlabel{flex:1;text-align:center;font-size:10px;color:#888}
+  .xaxis{display:flex;align-items:center;margin-left:38px;margin-top:4px}
+  .xaxis-line{flex:1;height:2px;background:#bbb}
+  .xaxis-label{display:flex;justify-content:center;margin-top:4px;margin-left:38px}
+  .card{border-radius:6px;padding:7px 20px 7px 8px;font-size:12px;font-weight:500;
+    cursor:grab;user-select:none;width:140px;min-width:140px;max-width:140px;
+    word-break:break-word;overflow-wrap:break-word;hyphens:auto;line-height:1.5;
+    position:relative;flex-shrink:0}
+  .card:active{cursor:grabbing}
+  .card .del{position:absolute;top:3px;right:4px;background:none;border:none;
+    cursor:pointer;font-size:10px;opacity:0.5;padding:0;line-height:1}
+  .card .cat-name{font-size:10px;opacity:0.6;margin-top:3px}
+  .ghost{position:fixed;pointer-events:none;z-index:9999;opacity:0.88;
+    border-radius:6px;padding:7px 8px;font-size:12px;font-weight:500;
+    width:140px;word-break:break-word;overflow-wrap:break-word;line-height:1.5}
+  .modal-bg{position:fixed;z-index:8000;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center}
+  .modal{background:#2a2a2a;border:0.5px solid #555;border-radius:10px;padding:16px;width:260px}
+  .modal h3{font-size:13px;font-weight:500;color:#e0e0e0;margin-bottom:10px}
+  .modal label{font-size:11px;color:#aaa;display:block;margin-bottom:2px}
+  .modal input,.modal select,.modal textarea{width:100%;font-size:13px;padding:6px 8px;
+    border:0.5px solid #555;border-radius:6px;background:#222;color:#e0e0e0;
+    font-family:inherit;margin-bottom:8px}
+  .modal textarea{height:70px;resize:vertical}
+  .modal-btns{display:flex;gap:8px;margin-top:4px}
+  .modal-btns button{flex:1;font-size:12px;padding:6px 0;border:0.5px solid #666;
+    border-radius:6px;background:transparent;color:#e0e0e0;cursor:pointer}
+  .loading{display:flex;align-items:center;justify-content:center;height:200px;color:#666;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- SUBSTITUA PELA SUA URL DO APPS SCRIPT -->
+<script>const API = "COLE_AQUI_A_URL_DO_SEU_APPS_SCRIPT";</script>
+
+<div class="topbar">
+  <h1>Matriz de Prioridade</h1>
+  <div style="display:flex;gap:6px;align-items:center">
+    <span class="status" id="status">carregando...</span>
+    <button id="btn-novo" onclick="togglePanel('novo')">+ Novo item</button>
+    <button id="btn-cats" onclick="togglePanel('cats')">Categorias</button>
+  </div>
+</div>
+
+<div id="panel-novo" class="panel" style="display:none">
+  <div class="grid2">
+    <div class="span2"><label>Nome</label><input id="f-nome" placeholder="Nome do item" onkeydown="if(event.key==='Enter')addItem()"/></div>
+    <div><label>Categoria</label><select id="f-cat"></select></div>
+    <div><label>Urgência</label>
+      <select id="f-urg"><option>BAIXA</option><option selected>MÉDIA</option><option>ALTA</option></select></div>
+    <div><label>Impacto</label>
+      <select id="f-imp"><option>ALTO</option><option selected>MÉDIO</option><option>BAIXO</option></select></div>
+  </div>
+  <button class="btn-add" onclick="addItem()">Adicionar</button>
+</div>
+
+<div id="panel-cats" class="panel" style="display:none">
+  <div class="cats-row" id="cats-list"></div>
+  <div class="grid2" style="grid-template-columns:1fr 70px 70px 70px">
+    <div><label>Nome</label><input id="c-nome" placeholder="Nova categoria"/></div>
+    <div><label>Fundo</label><input type="color" id="c-bg" value="#FAC775"/></div>
+    <div><label>Texto</label><input type="color" id="c-text" value="#633806"/></div>
+    <div><label>Borda</label><input type="color" id="c-border" value="#EF9F27"/></div>
+  </div>
+  <button class="btn-add" onclick="addCat()">Criar categoria</button>
+</div>
+
+<div class="matrix-wrap">
+  <div class="yaxis">
+    <div class="yaxis-line">
+      <svg width="12" height="10" viewBox="0 0 12 10"><polygon points="6,0 12,10 0,10" fill="#bbb"/></svg>
+      <div style="flex:1;width:2px;background:#bbb"></div>
+    </div>
+    <div class="yaxis-label">Impacto</div>
+    <div style="height:28px"></div>
+  </div>
+  <div class="matrix-col">
+    <div class="matrix-row">
+      <div class="ylabels">
+        <div class="ylabel">ALTO</div>
+        <div class="ylabel">MÉDIO</div>
+        <div class="ylabel">BAIXO</div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div class="xlabels">
+      <div class="xlabel">BAIXA</div>
+      <div class="xlabel">MÉDIA</div>
+      <div class="xlabel">ALTA</div>
+    </div>
+    <div class="xaxis">
+      <div class="xaxis-line"></div>
+      <svg width="10" height="12" viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12" fill="#bbb"/></svg>
+    </div>
+    <div class="xaxis-label"><span style="font-size:12px;font-weight:500;color:#ccc;letter-spacing:1px">Urgência</span></div>
+  </div>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div id="ghost" class="ghost" style="display:none"></div>
+
+<div id="modal-bg" class="modal-bg" style="display:none" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>Editar cartão</h3>
+    <label>Nome</label><textarea id="m-nome"></textarea>
+    <label>Categoria</label><select id="m-cat"></select>
+    <div class="modal-btns">
+      <button onclick="saveEdit()">Salvar</button>
+      <button onclick="closeModal()" style="color:#888">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const URGENCIAS = ["BAIXA","MÉDIA","ALTA"];
+const IMPACTOS  = ["ALTO","MÉDIO","BAIXO"];
+const CELL_COLORS = {
+  "ALTO__ALTA":"#c0392b25","ALTO__MÉDIA":"#e67e2228","ALTO__BAIXA":"#e67e2228",
+  "MÉDIO__ALTA":"#e67e2228","MÉDIO__MÉDIA":"#27ae6022","MÉDIO__BAIXO":"#27ae6022",
+  "BAIXO__ALTA":"#e67e2228","BAIXO__MÉDIA":"#27ae6022","BAIXO__BAIXO":"#66666618"
+};
+const CELL_BORDER = {
+  "ALTO__ALTA":"#c0392b55","ALTO__MÉDIA":"#e67e2240","ALTO__BAIXA":"#e67e2240",
+  "MÉDIO__ALTA":"#e67e2240","MÉDIO__MÉDIA":"#27ae6040","MÉDIO__BAIXO":"#27ae6040",
+  "BAIXO__ALTA":"#e67e2240","BAIXO__MÉDIA":"#27ae6040","BAIXO__BAIXO":"#66666635"
+};
+
+let state = { itens: [], cats: [] };
+let dragId = null, editId = null;
+let ghostEl = document.getElementById("ghost");
+
+function setStatus(msg, cls) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "status " + (cls || "");
+}
+
+async function api(method, body) {
+  try {
+    const opts = method === "GET"
+      ? { method: "GET" }
+      : { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(body) };
+    const r = await fetch(API, opts);
+    return await r.json();
+  } catch(e) {
+    setStatus("erro de conexão", "error");
+    return null;
+  }
+}
+
+async function load() {
+  setStatus("carregando...");
+  const data = await api("GET");
+  if (!data) return;
+  state = data;
+  render();
+  setStatus("salvo");
+}
+
+function getCat(nome) {
+  return state.cats.find(c => c.nome === nome) || { bg:"#ccc", text:"#333", border:"#999" };
+}
+
+function render() {
+  renderGrid();
+  renderCatList();
+  renderCatSelect();
+  renderLegend();
+}
+
+function renderGrid() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  IMPACTOS.forEach(imp => {
+    URGENCIAS.forEach(urg => {
+      const key = `${imp}__${urg}`;
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.urg = urg;
+      cell.dataset.imp = imp;
+      cell.style.background = CELL_COLORS[key] || "#66666618";
+      cell.style.borderColor = CELL_BORDER[key] || "#66666635";
+      cell.addEventListener("dragover", e => { e.preventDefault(); cell.classList.add("dragover"); });
+      cell.addEventListener("dragleave", () => cell.classList.remove("dragover"));
+      cell.addEventListener("drop", e => { e.preventDefault(); cell.classList.remove("dragover"); dropItem(urg, imp); });
+      state.itens.filter(i => i.urgencia === urg && i.impacto === imp).forEach(item => {
+        cell.appendChild(makeCard(item));
+      });
+      grid.appendChild(cell);
+    });
+  });
+}
+
+function makeCard(item) {
+  const cat = getCat(item.categoria);
+  const div = document.createElement("div");
+  div.className = "card";
+  div.draggable = true;
+  div.style.background = cat.bg;
+  div.style.border = `1.5px solid ${cat.border}`;
+  div.style.color = cat.text;
+  div.dataset.id = item.id;
+  div.innerHTML = `${escHtml(item.nome)}<button class="del" title="Remover">✕</button><div class="cat-name">${escHtml(item.categoria)}</div>`;
+  div.querySelector(".del").addEventListener("click", e => { e.stopPropagation(); deleteItem(item.id); });
+  div.addEventListener("dragstart", e => {
+    dragId = item.id;
+    e.dataTransfer.effectAllowed = "move";
+    ghostEl.textContent = item.nome;
+    ghostEl.style.background = cat.bg;
+    ghostEl.style.border = `1.5px solid ${cat.border}`;
+    ghostEl.style.color = cat.text;
+    ghostEl.style.display = "block";
+  });
+  div.addEventListener("dragend", () => { ghostEl.style.display = "none"; dragId = null; });
+  div.addEventListener("dblclick", e => { e.stopPropagation(); openEdit(item.id); });
+  return div;
+}
+
+document.addEventListener("dragover", e => {
+  ghostEl.style.left = (e.clientX - 70) + "px";
+  ghostEl.style.top  = (e.clientY - 30) + "px";
+});
+
+async function dropItem(urg, imp) {
+  if (!dragId) return;
+  const item = state.itens.find(i => String(i.id) === String(dragId));
+  if (!item || (item.urgencia === urg && item.impacto === imp)) return;
+  item.urgencia = urg;
+  item.impacto  = imp;
+  render();
+  setStatus("salvando...", "saving");
+  await api("POST", { action:"atualizarItem", id: item.id, urgencia: urg, impacto: imp });
+  setStatus("salvo");
+}
+
+async function addItem() {
+  const nome = document.getElementById("f-nome").value.trim();
+  if (!nome) return;
+  const payload = {
+    action: "criarItem",
+    nome,
+    categoria: document.getElementById("f-cat").value,
+    urgencia:  document.getElementById("f-urg").value,
+    impacto:   document.getElementById("f-imp").value,
+  };
+  setStatus("salvando...", "saving");
+  const r = await api("POST", payload);
+  if (r && r.ok) {
+    state.itens.push({ id: r.id, nome: payload.nome, categoria: payload.categoria, urgencia: payload.urgencia, impacto: payload.impacto });
+    document.getElementById("f-nome").value = "";
+    render();
+    setStatus("salvo");
+  }
+}
+
+async function deleteItem(id) {
+  state.itens = state.itens.filter(i => String(i.id) !== String(id));
+  render();
+  setStatus("salvando...", "saving");
+  await api("POST", { action:"deletarItem", id });
+  setStatus("salvo");
+}
+
+function openEdit(id) {
+  editId = id;
+  const item = state.itens.find(i => String(i.id) === String(id));
+  document.getElementById("m-nome").value = item.nome;
+  renderModalCatSelect(item.categoria);
+  document.getElementById("modal-bg").style.display = "flex";
+}
+
+async function saveEdit() {
+  const nome = document.getElementById("m-nome").value.trim();
+  const cat  = document.getElementById("m-cat").value;
+  const item = state.itens.find(i => String(i.id) === String(editId));
+  if (!item || !nome) return;
+  item.nome = nome;
+  item.categoria = cat;
+  closeModal();
+  render();
+  setStatus("salvando...", "saving");
+  await api("POST", { action:"atualizarItem", id: editId, nome, categoria: cat });
+  setStatus("salvo");
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById("modal-bg")) return;
+  document.getElementById("modal-bg").style.display = "none";
+  editId = null;
+}
+
+async function addCat() {
+  const nome = document.getElementById("c-nome").value.trim();
+  if (!nome) return;
+  const cat = {
+    nome,
+    bg:     document.getElementById("c-bg").value,
+    text:   document.getElementById("c-text").value,
+    border: document.getElementById("c-border").value,
+  };
+  state.cats.push(cat);
+  document.getElementById("c-nome").value = "";
+  render();
+  setStatus("salvando...", "saving");
+  await api("POST", { action:"criarCat", ...cat });
+  setStatus("salvo");
+}
+
+async function deleteCat(nome) {
+  state.cats = state.cats.filter(c => c.nome !== nome);
+  render();
+  setStatus("salvando...", "saving");
+  await api("POST", { action:"deletarCat", nome });
+  setStatus("salvo");
+}
+
+function renderCatList() {
+  const el = document.getElementById("cats-list");
+  el.innerHTML = "";
+  state.cats.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "cat-pill";
+    div.style.background = c.bg;
+    div.style.border = `1px solid ${c.border}`;
+    div.style.color = c.text;
+    div.innerHTML = `${escHtml(c.nome)}<button onclick="deleteCat('${escAttr(c.nome)}')">✕</button>`;
+    el.appendChild(div);
+  });
+}
+
+function renderCatSelect() {
+  const sel = document.getElementById("f-cat");
+  const cur = sel.value;
+  sel.innerHTML = "";
+  state.cats.forEach(c => {
+    const o = document.createElement("option");
+    o.value = c.nome; o.textContent = c.nome;
+    if (c.nome === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function renderModalCatSelect(selected) {
+  const sel = document.getElementById("m-cat");
+  sel.innerHTML = "";
+  state.cats.forEach(c => {
+    const o = document.createElement("option");
+    o.value = c.nome; o.textContent = c.nome;
+    if (c.nome === selected) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function renderLegend() {
+  const el = document.getElementById("legend");
+  el.innerHTML = "";
+  state.cats.forEach(c => {
+    const span = document.createElement("span");
+    span.className = "legend-pill";
+    span.style.background = c.bg;
+    span.style.color = c.text;
+    span.style.border = `1px solid ${c.border}`;
+    span.textContent = c.nome;
+    el.appendChild(span);
+  });
+  const count = document.createElement("span");
+  count.className = "count";
+  count.textContent = `${state.itens.length} item${state.itens.length !== 1 ? "s" : ""} · Google Sheets`;
+  el.appendChild(count);
+}
+
+function togglePanel(name) {
+  ["novo","cats"].forEach(n => {
+    const p = document.getElementById(`panel-${n}`);
+    const b = document.getElementById(`btn-${n === "novo" ? "novo" : "cats"}`);
+    if (n === name) {
+      const showing = p.style.display !== "none";
+      p.style.display = showing ? "none" : "block";
+      b.classList.toggle("active", !showing);
+    } else {
+      p.style.display = "none";
+      b.classList.remove("active");
+    }
+  });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function escAttr(s) {
+  return String(s).replace(/'/g,"\\'");
+}
+
+load();
+</script>
+</body>
+</html>
